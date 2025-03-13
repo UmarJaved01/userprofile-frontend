@@ -19,7 +19,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_API_URL: 'https://userprofile-backend-fxftavhsgzfqdydh.eastasia-01.azurewebsites.net'
+          VITE_API_URL: 'https://userprofile-backend-fxftavhsgzfqdydh.eastasia-01.azurewebsites.net/api'
       - name: Deploy to Azure Storage
         uses: azure/CLI@v1
         with:
