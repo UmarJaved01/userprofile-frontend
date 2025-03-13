@@ -1,0 +1,106 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #cdc4c4;
+}
+
+.profile-container {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  position: relative;
+  background-color: #8e8888;
+}
+.auth-container {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  border: 1px solid #0a0808;
+  border-radius: 5px;
+  position: relative;
+  background-color: #8e8888;
+}
+
+h2 {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+input, select {
+  width: 95%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #110d0d;
+  border-radius: 4px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #1f3a57;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 10px 0;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.delete-btn {
+  background-color: #671c24;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.logout-btn {
+  background-color: #884545;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.logout-btn:hover {
+  background-color: #5a6268;
+}
+
+p {
+  margin: 10px 0;
+  color: #133150;
+  cursor: pointer;
+}
+
+.password-container {
+  position: relative;
+}
+
+.password-container button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  color: #193656;
+}
+
+.profile-layout {
+  display: flex;
+  justify-content: space-between;
+}
+
+.profile-form, .profile-card {
+  width: 40%;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.profile-card {
+  text-align: left;
+}
