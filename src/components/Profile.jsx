@@ -33,6 +33,7 @@ const Profile = () => {
         return;
       }
 
+      console.log('Fetching profile, VITE_API_URL:', import.meta.env.VITE_API_URL);
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -44,6 +45,7 @@ const Profile = () => {
           gender: res.data.gender || '',
         });
       } catch (err) {
+        console.log('Profile fetch error response:', err.response);
         if (err.response && err.response.status === 401) {
           try {
             token = await refreshToken();
