@@ -26,4 +26,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
+            # Upload dist folder
             az storage blob upload-batch --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" --destination '$web' --source dist/ --overwrite --verbose
+            # Upload staticwebapp.config.json to root of $web container
+            az storage blob upload --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" --container-name '$web' --file staticwebapp.config.json --name staticwebapp.config.json --overwrite --verbose
