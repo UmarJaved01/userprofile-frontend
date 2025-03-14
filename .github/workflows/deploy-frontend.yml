@@ -13,20 +13,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '20' 
       - name: Install dependencies
         run: npm install
       - name: Build
-        run: |
-          echo "VITE_API_URL=https://userprofile-backend-fxftavhsgzfqdydh.eastasia-01.azurewebsites.net/api" >> $GITHUB_ENV
-          npm run build
+        run: npm run build
         env:
-          VITE_API_URL: https://userprofile-backend-fxftavhsgzfqdydh.eastasia-01.azurewebsites.net/api
+          VITE_API_URL: 'https://userprofile-backend-fxftavhsgzfqdydh.eastasia-01.azurewebsites.net/api'
       - name: Deploy to Azure Storage
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            # Upload dist folder
             az storage blob upload-batch --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" --destination '$web' --source dist/ --overwrite --verbose
-            # Upload staticwebapp.config.json to root of $web container
-            az storage blob upload --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" --container-name '$web' --file staticwebapp.config.json --name staticwebapp.config.json --overwrite --verbose
