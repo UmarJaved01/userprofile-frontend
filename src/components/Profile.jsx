@@ -12,16 +12,16 @@ const Profile = () => {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/refresh`,
         {},
-        { withCredentials: true } // Send refresh token cookie
+        { withCredentials: true }
       );
       const newAccessToken = res.data.accessToken;
-      localStorage.setItem('token', newAccessToken); // Update token in localStorage
+      localStorage.setItem('token', newAccessToken);
       return newAccessToken;
     } catch (err) {
       console.error('Error refreshing token:', err.response?.data || err.message);
-      localStorage.removeItem('token'); // Clear invalid token
-      navigate('/'); // Redirect to login if refresh fails
-      throw err; // Re-throw to handle in caller
+      localStorage.removeItem('token');
+      navigate('/');
+      throw err;
     }
   };
 
@@ -29,7 +29,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       let token = localStorage.getItem('token');
       if (!token) {
-        navigate('/'); // Redirect to login if no token
+        navigate('/');
         return;
       }
 
@@ -45,7 +45,6 @@ const Profile = () => {
         });
       } catch (err) {
         if (err.response && err.response.status === 401) {
-          // Token might be expired, try refreshing it
           try {
             token = await refreshToken();
             const res = await axios.get(`${import.meta.env.VITE_API_URL}/profile`, {
@@ -58,13 +57,13 @@ const Profile = () => {
               gender: res.data.gender || '',
             });
           } catch (refreshErr) {
-            // If refresh fails, user is already redirected by refreshToken
+            // Redirect already handled in refreshToken
           }
         } else if (err.response && err.response.status === 404) {
-          setProfile(null); // No profile exists, handled silently
+          setProfile(null);
         } else {
           console.error('Error fetching profile:', err.response?.data || err.message);
-          navigate('/'); // Redirect to login on other errors
+          navigate('/');
         }
       }
     };
@@ -115,9 +114,20 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
+      localStorage.removeItem('token');
+      navigate('/');
+    } catch (err) {
+      console.error('Error logging out:', err.response?.data || err.message);
+      localStorage.removeItem('token');
+      navigate('/');
+    }
   };
 
   return (
