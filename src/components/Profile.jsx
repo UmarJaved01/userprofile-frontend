@@ -1,5 +1,6 @@
+// src/components/Profile.jsx
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
@@ -7,34 +8,11 @@ const Profile = () => {
   const [formData, setFormData] = useState({ name: '', age: '', gender: '' });
   const navigate = useNavigate();
 
-  const refreshToken = async () => {
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/refresh`,
-        {},
-        { withCredentials: true }
-      );
-      const newAccessToken = res.data.accessToken;
-      localStorage.setItem('token', newAccessToken);
-      return newAccessToken;
-    } catch (err) {
-      console.error('Error refreshing token:', err.response?.data || err.message);
-      localStorage.removeItem('token');
-      navigate('/');
-      throw err;
-    }
-  };
-
   useEffect(() => {
     const fetchProfile = async () => {
-      let token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/');
-        return;
-      }
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await axiosInstance.get('/profile', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setProfile(res.data);
         setFormData({
@@ -43,26 +21,12 @@ const Profile = () => {
           gender: res.data.gender || '',
         });
       } catch (err) {
-        console.log('Profile fetch error response:', err.response);
-        if (err.response && err.response.status === 401) {
-          try {
-            token = await refreshToken();
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/profile`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            setProfile(res.data);
-            setFormData({
-              name: res.data.name || '',
-              age: res.data.age || '',
-              gender: res.data.gender || '',
-            });
-          } catch (refreshErr) {
-            // Redirect already handled in refreshToken
-          }
-        } else if (err.response && err.response.status === 404) {
+        console.error('Error fetching profile:', err.response?.data || err.message);
+        if (err.response && err.response.status === 404) {
           setProfile(null);
         } else {
-          console.error('Error fetching profile:', err.response?.data || err.message);
+          setProfile(null);
+          setFormData({ name: '', age: '', gender: '' });
           navigate('/');
         }
       }
@@ -77,55 +41,53 @@ const Profile = () => {
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/profile`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axiosInstance.post('/profile', formData);
       setProfile(res.data);
     } catch (err) {
       console.error('Error adding profile:', err.response?.data || err.message);
+      if (err.response && err.response.status === 401) {
+        navigate('/');
+      }
     }
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.put(`${import.meta.env.VITE_API_URL}/profile`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axiosInstance.put('/profile', formData);
       setProfile(res.data);
     } catch (err) {
       console.error('Error updating profile:', err.response?.data || err.message);
+      if (err.response && err.response.status === 401) {
+        navigate('/');
+      }
     }
   };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete your profile?')) return;
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${import.meta.env.VITE_API_URL}/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete('/profile');
       setProfile(null);
       setFormData({ name: '', age: '', gender: '' });
     } catch (err) {
       console.error('Error deleting profile:', err.response?.data || err.message);
+      if (err.response && err.response.status === 401) {
+        navigate('/');
+      }
     }
   };
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
+      await axiosInstance.post('/auth/logout');
       localStorage.removeItem('token');
+      setProfile(null);
       navigate('/');
     } catch (err) {
       console.error('Error logging out:', err.response?.data || err.message);
       localStorage.removeItem('token');
+      setProfile(null);
       navigate('/');
     }
   };
