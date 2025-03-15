@@ -2,8 +2,19 @@ import axios from 'axios';
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true, // Allow cookies to be sent with requests (for refresh token)
+  withCredentials: true,
 });
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -26,7 +37,6 @@ axiosInstance.interceptors.response.use(
 
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // If a refresh is already in progress, queue the request
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -41,35 +51,32 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Attempt to refresh the access token
-        const res = await axiosInstance.post('/auth/refresh', {}, {
-          withCredentials: true, // Ensure cookies are sent
-        });
+        const res = await axiosInstance.post('/auth/refresh', {}, { withCredentials: true });
         const newAccessToken = res.data.accessToken;
 
-        // Update the token in localStorage
         localStorage.setItem('token', newAccessToken);
-
-        // Update the Authorization header for the original request
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-        // Process any queued requests with the new token
         processQueue(null, newAccessToken);
-
-        // Retry the original request
         return axiosInstance(originalRequest);
       } catch (refreshErr) {
-        // If refresh fails (e.g., invalid refresh token), log out the user
-        console.error('Refresh token failed:', refreshErr.response?.data || refreshErr.message);
-        localStorage.removeItem('token'); // Clear invalid token
+        console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
+        localStorage.removeItem('token'); // Clear the access token
         processQueue(refreshErr, null);
-        window.location.href = '/'; // Redirect to login
+
+        // Redirect to login page
+        if (window.location.pathname !== '/') {
+          console.log('Redirecting to login page due to invalid refresh token');
+          window.location.href = '/';
+        }
+
         return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;
       }
     }
 
+    // If the error is not a 401 or we've already retried, reject the error
+    console.log('Request failed:', error.response?.data?.msg || error.message);
     return Promise.reject(error);
   }
 );

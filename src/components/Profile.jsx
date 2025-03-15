@@ -1,4 +1,3 @@
-// src/components/Profile.jsx
 import { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
@@ -9,11 +8,9 @@ const Profile = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const validateSessionAndFetchProfile = async () => {
       try {
-        const res = await axiosInstance.get('/profile', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
+        const res = await axiosInstance.get('/profile');
         setProfile(res.data);
         setFormData({
           name: res.data.name || '',
@@ -21,17 +18,15 @@ const Profile = () => {
           gender: res.data.gender || '',
         });
       } catch (err) {
-        console.error('Error fetching profile:', err.response?.data || err.message);
-        if (err.response && err.response.status === 404) {
-          setProfile(null);
-        } else {
-          setProfile(null);
-          setFormData({ name: '', age: '', gender: '' });
-          navigate('/');
-        }
+        console.error('Session validation or profile fetch failed:', err.response?.data || err.message);
+        setProfile(null);
+        setFormData({ name: '', age: '', gender: '' });
+        // Interceptor should handle redirect, but as a fallback, redirect here
+        localStorage.removeItem('token');
+        navigate('/');
       }
     };
-    fetchProfile();
+    validateSessionAndFetchProfile();
   }, [navigate]);
 
   const handleChange = (e) => {
@@ -45,9 +40,9 @@ const Profile = () => {
       setProfile(res.data);
     } catch (err) {
       console.error('Error adding profile:', err.response?.data || err.message);
-      if (err.response && err.response.status === 401) {
-        navigate('/');
-      }
+      // Interceptor should handle redirect, but as a fallback, redirect here
+      localStorage.removeItem('token');
+      navigate('/');
     }
   };
 
@@ -58,9 +53,9 @@ const Profile = () => {
       setProfile(res.data);
     } catch (err) {
       console.error('Error updating profile:', err.response?.data || err.message);
-      if (err.response && err.response.status === 401) {
-        navigate('/');
-      }
+      // Interceptor should handle redirect, but as a fallback, redirect here
+      localStorage.removeItem('token');
+      navigate('/');
     }
   };
 
@@ -72,9 +67,9 @@ const Profile = () => {
       setFormData({ name: '', age: '', gender: '' });
     } catch (err) {
       console.error('Error deleting profile:', err.response?.data || err.message);
-      if (err.response && err.response.status === 401) {
-        navigate('/');
-      }
+      // Interceptor should handle redirect, but as a fallback, redirect here
+      localStorage.removeItem('token');
+      navigate('/');
     }
   };
 
