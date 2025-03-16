@@ -63,10 +63,10 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem('token'); // Clear the access token
         processQueue(refreshErr, null);
 
-        // Redirect to login page
+        // Force redirect to login page
         if (window.location.pathname !== '/') {
-          console.log('Redirecting to login page due to invalid refresh token');
-          window.location.href = '/';
+          console.log('Redirecting to login page due to invalid/expired refresh token');
+          window.location.replace('/'); // Use replace to avoid back navigation
         }
 
         return Promise.reject(refreshErr);
@@ -75,7 +75,7 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    // If the error is not a 401 or we've already retried, reject the error
+    // Log other errors for debugging
     console.log('Request failed:', error.response?.data?.msg || error.message);
     return Promise.reject(error);
   }

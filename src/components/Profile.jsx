@@ -19,11 +19,8 @@ const Profile = () => {
         });
       } catch (err) {
         console.error('Session validation or profile fetch failed:', err.response?.data || err.message);
-        setProfile(null);
-        setFormData({ name: '', age: '', gender: '' });
-        // Interceptor should handle redirect, but as a fallback, redirect here
-        localStorage.removeItem('token');
-        navigate('/');
+        localStorage.removeItem('token'); // Clear token on failure
+        navigate('/'); // Redirect to login page
       }
     };
     validateSessionAndFetchProfile();
@@ -40,9 +37,8 @@ const Profile = () => {
       setProfile(res.data);
     } catch (err) {
       console.error('Error adding profile:', err.response?.data || err.message);
-      // Interceptor should handle redirect, but as a fallback, redirect here
-      localStorage.removeItem('token');
-      navigate('/');
+      localStorage.removeItem('token'); // Clear token on failure
+      navigate('/'); // Redirect to login page
     }
   };
 
@@ -53,9 +49,8 @@ const Profile = () => {
       setProfile(res.data);
     } catch (err) {
       console.error('Error updating profile:', err.response?.data || err.message);
-      // Interceptor should handle redirect, but as a fallback, redirect here
-      localStorage.removeItem('token');
-      navigate('/');
+      localStorage.removeItem('token'); // Clear token on failure
+      navigate('/'); // Redirect to login page
     }
   };
 
@@ -67,9 +62,8 @@ const Profile = () => {
       setFormData({ name: '', age: '', gender: '' });
     } catch (err) {
       console.error('Error deleting profile:', err.response?.data || err.message);
-      // Interceptor should handle redirect, but as a fallback, redirect here
-      localStorage.removeItem('token');
-      navigate('/');
+      localStorage.removeItem('token'); // Clear token on failure
+      navigate('/'); // Redirect to login page
     }
   };
 
