@@ -59,29 +59,23 @@ axiosInstance.interceptors.response.use(
         processQueue(null, newAccessToken);
         return axiosInstance(originalRequest);
       } catch (refreshErr) {
-        console.log('Refresh token failure details:', {
-          message: refreshErr.response?.data?.msg || refreshErr.message,
-          status: refreshErr.response?.status,
-          url: refreshErr.config?.url,
-        });
+        console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
         localStorage.removeItem('token'); // Clear the access token
 
-        // Force synchronous redirect before any further processing
+        // Immediate and synchronous redirect
         if (window.location.pathname !== '/') {
-          console.log('Forcing immediate logout and redirect to login page');
-          window.location.replace('/'); // Immediate redirect
-          // Wait briefly to ensure redirect occurs
-          await new Promise(resolve => setTimeout(resolve, 500)); // Increased delay to 500ms
+          console.log('Redirecting to login page due to refresh token failure');
+          window.location.replace('/'); // Force redirect now
         }
 
         processQueue(refreshErr, null);
-        throw refreshErr; // Throw to trigger catch in calling component
+        return Promise.reject(refreshErr); // Reject after redirect
       } finally {
         isRefreshing = false;
       }
     }
 
-    console.log('General request failure:', error.response?.data?.msg || error.message);
+    console.log('Request failed:', error.response?.data?.msg || error.message);
     return Promise.reject(error);
   }
 );

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({ name: '', age: '', gender: '' });
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,8 +19,10 @@ const Profile = () => {
           gender: res.data.gender || '',
         });
       } catch (err) {
-        console.error('Session or profile fetch failed:', err.message);
-        handleLogoutOnFailure(err); // Force logout and redirect
+        console.error('Session validation failed:', err.message);
+        handleLogoutOnFailure(); // Force logout and redirect
+      } finally {
+        setIsLoading(false); // Ensure loading state is cleared
       }
     };
     validateSessionAndFetchProfile();
@@ -31,35 +34,38 @@ const Profile = () => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (isLoading) return; // Prevent action during loading
     try {
       const res = await axiosInstance.post('/profile', formData);
       setProfile(res.data);
     } catch (err) {
       console.error('Error adding profile:', err.message);
-      handleLogoutOnFailure(err); // Force logout and redirect
+      handleLogoutOnFailure(); // Force logout and redirect
     }
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (isLoading) return; // Prevent action during loading
     try {
       const res = await axiosInstance.put('/profile', formData);
       setProfile(res.data);
     } catch (err) {
       console.error('Error updating profile:', err.message);
-      handleLogoutOnFailure(err); // Force logout and redirect
+      handleLogoutOnFailure(); // Force logout and redirect
     }
   };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete your profile?')) return;
+    if (isLoading) return; // Prevent action during loading
     try {
       await axiosInstance.delete('/profile');
       setProfile(null);
       setFormData({ name: '', age: '', gender: '' });
     } catch (err) {
       console.error('Error deleting profile:', err.message);
-      handleLogoutOnFailure(err); // Force logout and redirect
+      handleLogoutOnFailure(); // Force logout and redirect
     }
   };
 
@@ -75,12 +81,17 @@ const Profile = () => {
     }
   };
 
-  const handleLogoutOnFailure = (err) => {
-    console.log('Forcing logout due to error:', err.message);
+  const handleLogoutOnFailure = () => {
+    console.log('Forcing logout due to session or operation failure');
     localStorage.removeItem('token');
     setProfile(null);
+    setIsLoading(false); // Ensure loading state is cleared
     navigate('/'); // Force redirect to login page
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Prevent rendering profile during validation
+  }
 
   return (
     <div className="profile-container">
