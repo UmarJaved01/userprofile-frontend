@@ -18,9 +18,8 @@ const Profile = () => {
           gender: res.data.gender || '',
         });
       } catch (err) {
-        console.error('Session validation or profile fetch failed:', err.response?.data || err.message);
-        localStorage.removeItem('token'); // Clear token on failure
-        navigate('/'); // Redirect to login page
+        console.error('Session or profile fetch failed:', err.response?.data || err.message);
+        handleLogoutOnFailure(); // Force logout and redirect
       }
     };
     validateSessionAndFetchProfile();
@@ -37,8 +36,7 @@ const Profile = () => {
       setProfile(res.data);
     } catch (err) {
       console.error('Error adding profile:', err.response?.data || err.message);
-      localStorage.removeItem('token'); // Clear token on failure
-      navigate('/'); // Redirect to login page
+      handleLogoutOnFailure(); // Force logout and redirect
     }
   };
 
@@ -49,8 +47,7 @@ const Profile = () => {
       setProfile(res.data);
     } catch (err) {
       console.error('Error updating profile:', err.response?.data || err.message);
-      localStorage.removeItem('token'); // Clear token on failure
-      navigate('/'); // Redirect to login page
+      handleLogoutOnFailure(); // Force logout and redirect
     }
   };
 
@@ -62,23 +59,26 @@ const Profile = () => {
       setFormData({ name: '', age: '', gender: '' });
     } catch (err) {
       console.error('Error deleting profile:', err.response?.data || err.message);
-      localStorage.removeItem('token'); // Clear token on failure
-      navigate('/'); // Redirect to login page
+      handleLogoutOnFailure(); // Force logout and redirect
     }
   };
 
   const handleLogout = async () => {
     try {
       await axiosInstance.post('/auth/logout');
-      localStorage.removeItem('token');
-      setProfile(null);
-      navigate('/');
     } catch (err) {
       console.error('Error logging out:', err.response?.data || err.message);
+    } finally {
       localStorage.removeItem('token');
       setProfile(null);
       navigate('/');
     }
+  };
+
+  const handleLogoutOnFailure = () => {
+    console.log('Forcing logout due to session failure');
+    localStorage.removeItem('token');
+    navigate('/');
   };
 
   return (

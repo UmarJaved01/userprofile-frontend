@@ -59,24 +59,29 @@ axiosInstance.interceptors.response.use(
         processQueue(null, newAccessToken);
         return axiosInstance(originalRequest);
       } catch (refreshErr) {
-        console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
+        console.log('Refresh token failure details:', {
+          message: refreshErr.response?.data?.msg || refreshErr.message,
+          status: refreshErr.response?.status,
+          url: refreshErr.config?.url,
+        });
         localStorage.removeItem('token'); // Clear the access token
-        processQueue(refreshErr, null);
 
-        // Force redirect to login page
+        // Force redirect before rejecting the promise
         if (window.location.pathname !== '/') {
-          console.log('Redirecting to login page due to invalid/expired refresh token');
-          window.location.replace('/'); // Use replace to avoid back navigation
+          console.log('Forcing redirect to login page due to refresh token failure');
+          window.location.replace('/'); // Immediate redirect
+          // Add a small delay to ensure redirect happens
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
+        processQueue(refreshErr, null);
         return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;
       }
     }
 
-    // Log other errors for debugging
-    console.log('Request failed:', error.response?.data?.msg || error.message);
+    console.log('General request failure:', error.response?.data?.msg || error.message);
     return Promise.reject(error);
   }
 );
