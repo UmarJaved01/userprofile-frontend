@@ -66,16 +66,16 @@ axiosInstance.interceptors.response.use(
         });
         localStorage.removeItem('token'); // Clear the access token
 
-        // Force redirect before rejecting the promise
+        // Force synchronous redirect before any further processing
         if (window.location.pathname !== '/') {
-          console.log('Forcing redirect to login page due to refresh token failure');
+          console.log('Forcing immediate logout and redirect to login page');
           window.location.replace('/'); // Immediate redirect
-          // Add a small delay to ensure redirect happens
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // Wait briefly to ensure redirect occurs
+          await new Promise(resolve => setTimeout(resolve, 500)); // Increased delay to 500ms
         }
 
         processQueue(refreshErr, null);
-        return Promise.reject(refreshErr);
+        throw refreshErr; // Throw to trigger catch in calling component
       } finally {
         isRefreshing = false;
       }
