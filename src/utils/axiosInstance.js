@@ -63,6 +63,7 @@ axiosInstance.interceptors.response.use(
       } catch (refreshErr) {
         console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
         localStorage.removeItem('token'); // Clear the access token
+        processQueue(refreshErr, null);
 
         // Immediate redirect on refresh failure
         if (window.location.pathname !== '/') {
