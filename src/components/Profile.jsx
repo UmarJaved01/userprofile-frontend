@@ -1,21 +1,14 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx';
 
 const Profile = () => {
-  const { isLoggedIn, logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({ name: '', age: '', gender: '' });
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      navigate('/', { replace: true });
-      return;
-    }
-
     const validateSessionAndFetchProfile = async () => {
       try {
         console.log('Validating session on Profile page load');
@@ -29,13 +22,13 @@ const Profile = () => {
         });
       } catch (err) {
         console.error('Session validation failed:', err.message);
-        setProfile(null);
+        handleLogoutOnFailure(err);
       } finally {
         setIsLoading(false);
       }
     };
     validateSessionAndFetchProfile();
-  }, [navigate, isLoggedIn]);
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -43,33 +36,33 @@ const Profile = () => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (isLoading || !isLoggedIn) return;
+    if (isLoading) return;
     try {
       console.log('Attempting to add profile');
       const res = await axiosInstance.post('/profile', formData);
       setProfile(res.data);
     } catch (err) {
       console.error('Error adding profile:', err.message);
-      setProfile(null);
+      handleLogoutOnFailure(err);
     }
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (isLoading || !isLoggedIn) return;
+    if (isLoading) return;
     try {
       console.log('Attempting to update profile');
       const res = await axiosInstance.put('/profile', formData);
       setProfile(res.data);
     } catch (err) {
       console.error('Error updating profile:', err.message);
-      setProfile(null);
+      handleLogoutOnFailure(err);
     }
   };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete your profile?')) return;
-    if (isLoading || !isLoggedIn) return;
+    if (isLoading) return;
     try {
       console.log('Attempting to delete profile');
       await axiosInstance.delete('/profile');
@@ -77,20 +70,33 @@ const Profile = () => {
       setFormData({ name: '', age: '', gender: '' });
     } catch (err) {
       console.error('Error deleting profile:', err.message);
-      setProfile(null);
+      handleLogoutOnFailure(err);
     }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      console.log('Attempting manual logout');
+      await axiosInstance.post('/auth/logout');
+    } catch (err) {
+      console.error('Error logging out:', err.message);
+    } finally {
+      localStorage.removeItem('token');
+      setProfile(null);
+      navigate('/');
+    }
+  };
+
+  const handleLogoutOnFailure = (err) => {
+    console.log('Forcing logout due to error:', err.message);
+    localStorage.removeItem('token');
+    setProfile(null);
+    setIsLoading(false);
+    navigate('/'); // Force redirect to login page
   };
 
   if (isLoading) {
     return <div>Loading...</div>;
-  }
-
-  if (!isLoggedIn) {
-    return null;
   }
 
   return (
