@@ -5,12 +5,15 @@ import { useNavigate } from 'react-router-dom';
 const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({ name: '', age: '', gender: '' });
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const validateSessionAndFetchProfile = async () => {
       try {
+        console.log('Validating session on Profile page load');
         const res = await axiosInstance.get('/profile');
+        console.log('Session validated, profile fetched:', res.data);
         setProfile(res.data);
         setFormData({
           name: res.data.name || '',
@@ -18,12 +21,10 @@ const Profile = () => {
           gender: res.data.gender || '',
         });
       } catch (err) {
-        console.error('Session validation or profile fetch failed:', err.response?.data || err.message);
-        setProfile(null);
-        setFormData({ name: '', age: '', gender: '' });
-        // Interceptor should handle redirect, but as a fallback, redirect here
-        localStorage.removeItem('token');
-        navigate('/');
+        console.error('Session validation failed:', err.message);
+        handleLogoutOnFailure(err);
+      } finally {
+        setIsLoading(false);
       }
     };
     validateSessionAndFetchProfile();
@@ -35,57 +36,68 @@ const Profile = () => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
     try {
+      console.log('Attempting to add profile');
       const res = await axiosInstance.post('/profile', formData);
       setProfile(res.data);
     } catch (err) {
-      console.error('Error adding profile:', err.response?.data || err.message);
-      // Interceptor should handle redirect, but as a fallback, redirect here
-      localStorage.removeItem('token');
-      navigate('/');
+      console.error('Error adding profile:', err.message);
+      handleLogoutOnFailure(err);
     }
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
     try {
+      console.log('Attempting to update profile');
       const res = await axiosInstance.put('/profile', formData);
       setProfile(res.data);
     } catch (err) {
-      console.error('Error updating profile:', err.response?.data || err.message);
-      // Interceptor should handle redirect, but as a fallback, redirect here
-      localStorage.removeItem('token');
-      navigate('/');
+      console.error('Error updating profile:', err.message);
+      handleLogoutOnFailure(err);
     }
   };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete your profile?')) return;
+    if (isLoading) return;
     try {
+      console.log('Attempting to delete profile');
       await axiosInstance.delete('/profile');
       setProfile(null);
       setFormData({ name: '', age: '', gender: '' });
     } catch (err) {
-      console.error('Error deleting profile:', err.response?.data || err.message);
-      // Interceptor should handle redirect, but as a fallback, redirect here
-      localStorage.removeItem('token');
-      navigate('/');
+      console.error('Error deleting profile:', err.message);
+      handleLogoutOnFailure(err);
     }
   };
 
   const handleLogout = async () => {
     try {
+      console.log('Attempting manual logout');
       await axiosInstance.post('/auth/logout');
-      localStorage.removeItem('token');
-      setProfile(null);
-      navigate('/');
     } catch (err) {
-      console.error('Error logging out:', err.response?.data || err.message);
+      console.error('Error logging out:', err.message);
+    } finally {
       localStorage.removeItem('token');
       setProfile(null);
       navigate('/');
     }
   };
+
+  const handleLogoutOnFailure = (err) => {
+    console.log('Forcing logout due to error:', err.message);
+    localStorage.removeItem('token');
+    setProfile(null);
+    setIsLoading(false);
+    navigate('/'); // Force redirect to login page
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="profile-container">
