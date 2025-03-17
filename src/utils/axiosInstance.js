@@ -70,13 +70,20 @@ axiosInstance.interceptors.response.use(
         processQueue(null, newAccessToken);
         return axiosInstance(originalRequest);
       } catch (refreshErr) {
-        console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
-        handleLogoutOnRefreshFailure(); // Trigger logout
+        console.error('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
+        handleLogoutOnRefreshFailure(); // Trigger logout immediately
         processQueue(refreshErr, null);
-        return Promise.reject(refreshErr);
+        return Promise.reject(refreshErr); // Reject the promise to stop further processing
       } finally {
         isRefreshing = false;
       }
+    }
+
+    // Handle any other 401 errors (e.g., invalid access token without retry)
+    if (error.response && error.response.status === 401) {
+      console.log('401 Unauthorized error detected, forcing logout');
+      handleLogoutOnRefreshFailure(); // Force logout on any 401
+      return Promise.reject(error); // Reject to stop further execution
     }
 
     console.log('Request failed:', error.response?.data?.msg || error.message);
@@ -84,4 +91,4 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export default axiosInstance;
+export default axiosInstance; 

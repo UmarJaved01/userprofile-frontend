@@ -22,7 +22,9 @@ const Profile = () => {
         });
       } catch (err) {
         console.error('Session validation failed:', err.message);
-        handleLogoutOnFailure(err); // Handle failure, including refresh token issues
+        // Logout is handled by axios interceptor, no need to duplicate here
+        setProfile(null); // Ensure profile state is cleared
+        setIsLoading(false);
       } finally {
         setIsLoading(false);
       }
@@ -43,7 +45,8 @@ const Profile = () => {
       setProfile(res.data);
     } catch (err) {
       console.error('Error adding profile:', err.message);
-      handleLogoutOnFailure(err);
+      setProfile(null); // Clear profile on error
+      setIsLoading(false);
     }
   };
 
@@ -56,7 +59,8 @@ const Profile = () => {
       setProfile(res.data);
     } catch (err) {
       console.error('Error updating profile:', err.message);
-      handleLogoutOnFailure(err);
+      setProfile(null); // Clear profile on error
+      setIsLoading(false);
     }
   };
 
@@ -70,7 +74,8 @@ const Profile = () => {
       setFormData({ name: '', age: '', gender: '' });
     } catch (err) {
       console.error('Error deleting profile:', err.message);
-      handleLogoutOnFailure(err);
+      setProfile(null); // Clear profile on error
+      setIsLoading(false);
     }
   };
 
@@ -84,25 +89,6 @@ const Profile = () => {
       localStorage.removeItem('token');
       setProfile(null);
       navigate('/', { replace: true }); // Replace history to prevent back navigation
-    }
-  };
-
-  const handleLogoutOnFailure = (err) => {
-    console.log('Forcing logout due to error:', err.message);
-    // Check if the error is due to a refresh token failure
-    const isRefreshTokenError =
-      err.response?.status === 401 &&
-      err.response?.data?.msg?.includes('refresh token');
-    
-    localStorage.removeItem('token');
-    setProfile(null);
-    setIsLoading(false);
-    
-    if (isRefreshTokenError) {
-      console.log('Refresh token failure detected, logging out immediately');
-      navigate('/', { replace: true }); // Immediate redirect on refresh token failure
-    } else {
-      navigate('/', { replace: true }); // Redirect for other errors as well
     }
   };
 
