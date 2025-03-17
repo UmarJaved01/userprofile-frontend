@@ -62,7 +62,7 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (refreshErr) {
         console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
-        // Clear the access token
+        // Clear access token and trigger logout only on refresh failure
         localStorage.removeItem('token');
         processQueue(refreshErr, null);
         return Promise.reject(refreshErr);

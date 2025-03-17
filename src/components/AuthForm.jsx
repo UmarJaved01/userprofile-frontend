@@ -11,6 +11,7 @@ const AuthForm = () => {
     confirmPassword: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add submitting state
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -19,6 +20,8 @@ const AuthForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
     try {
       const url = isSignup ? '/auth/signup' : '/auth/login';
       const data = isSignup
@@ -42,6 +45,8 @@ const AuthForm = () => {
     } catch (err) {
       console.error('Auth error:', err.response?.data?.msg || err.message);
       alert(err.response?.data?.msg || 'An error occurred');
+    } finally {
+      setIsSubmitting(false); // Reset submitting state
     }
   };
 
@@ -92,7 +97,9 @@ const AuthForm = () => {
             />
           </div>
         )}
-        <button type="submit">{isSignup ? 'Sign Up' : 'Login'}</button>
+        <button type="submit" disabled={isSubmitting}>
+          {isSignup ? 'Sign Up' : 'Login'}
+        </button>
       </form>
       <p onClick={() => setIsSignup(!isSignup)}>
         {isSignup ? 'Already have an account? Login' : 'Need an account? Sign Up'}
