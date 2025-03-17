@@ -54,12 +54,8 @@ axiosInstance.interceptors.response.use(
         console.log('Attempting to refresh access token');
         const res = await axiosInstance.post('/auth/refresh', {}, { withCredentials: true });
         const newAccessToken = res.data.accessToken;
-
-        if (!newAccessToken) {
-          throw new Error('No access token received from refresh endpoint');
-        }
-
         console.log('New access token generated:', newAccessToken);
+
         localStorage.setItem('token', newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         processQueue(null, newAccessToken);
@@ -68,9 +64,9 @@ axiosInstance.interceptors.response.use(
         console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
         localStorage.removeItem('token'); // Clear the access token
 
-        // Redirect to login page if refresh fails or no new token is received
+        // Immediate redirect on refresh failure
         if (window.location.pathname !== '/') {
-          console.log('Redirecting to login page due to refresh token failure or no new token');
+          console.log('Redirecting to login page due to refresh token failure');
           window.location.href = '/'; // Use href for compatibility
         }
 
