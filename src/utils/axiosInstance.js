@@ -13,15 +13,11 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    console.error('Request setup error:', error.message);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 let isRefreshing = false;
 let failedQueue = [];
-let isRedirecting = false;
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach((prom) => {
@@ -39,10 +35,6 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (isRedirecting) {
-      return Promise.reject(error);
-    }
-
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -59,7 +51,7 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        console.log('Attempting to refresh access token with httpOnly cookie');
+        console.log('Attempting to refresh access token');
         const res = await axiosInstance.post('/auth/refresh', {}, { withCredentials: true });
         const newAccessToken = res.data.accessToken;
         console.log('New access token generated:', newAccessToken);
@@ -69,42 +61,25 @@ axiosInstance.interceptors.response.use(
         processQueue(null, newAccessToken);
         return axiosInstance(originalRequest);
       } catch (refreshErr) {
-        console.log('Refresh token failure on HTTPS:', {
-          message: refreshErr.response?.data?.msg || refreshErr.message,
-          status: refreshErr.response?.status,
-          url: refreshErr.config?.url,
-        });
+        console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
+        localStorage.removeItem('token'); // Clear the access token
 
-        localStorage.removeItem('token');
-        isRefreshing = false;
-        failedQueue = [];
-        isRedirecting = true;
-
+        // Immediate redirect on refresh failure
         if (window.location.pathname !== '/') {
-          console.log('Forcing logout and redirect to login page on HTTPS');
-          window.location.href = '/';
+          console.log('Redirecting to login page due to refresh token failure');
+          window.location.href = '/'; // Use href for compatibility
         }
 
+        processQueue(refreshErr, null);
         return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;
       }
     }
 
-    console.log('Request failed on HTTPS:', error.response?.data?.msg || error.message);
+    console.log('Request failed:', error.response?.data?.msg || error.message);
     return Promise.reject(error);
   }
 );
-
-export const validateSession = async () => {
-  try {
-    const res = await axiosInstance.get('/auth/validate-session', { withCredentials: true });
-    console.log('Session validation response:', res.data);
-    return res.data.msg === 'Session valid';
-  } catch (err) {
-    console.error('Session validation failed:', err.message);
-    return false;
-  }
-};
 
 export default axiosInstance;
