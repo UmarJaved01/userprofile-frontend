@@ -11,9 +11,7 @@ const Profile = () => {
   useEffect(() => {
     const validateSessionAndFetchProfile = async () => {
       try {
-        console.log('Validating session on Profile page load');
         const res = await axiosInstance.get('/profile');
-        console.log('Session validated, profile fetched:', res.data);
         setProfile(res.data);
         setFormData({
           name: res.data.name || '',
@@ -21,7 +19,6 @@ const Profile = () => {
           gender: res.data.gender || '',
         });
       } catch (err) {
-        console.error('Session validation failed:', err.message);
         handleLogoutOnFailure(err);
       } finally {
         setIsLoading(false);
@@ -38,11 +35,9 @@ const Profile = () => {
     e.preventDefault();
     if (isLoading) return;
     try {
-      console.log('Attempting to add profile');
       const res = await axiosInstance.post('/profile', formData);
       setProfile(res.data);
     } catch (err) {
-      console.error('Error adding profile:', err.message);
       handleLogoutOnFailure(err);
     }
   };
@@ -51,7 +46,6 @@ const Profile = () => {
     e.preventDefault();
     if (isLoading) return;
     try {
-      console.log('Attempting to update profile');
       const res = await axiosInstance.put('/profile', formData);
       setProfile(res.data);
     } catch (err) {
@@ -64,7 +58,6 @@ const Profile = () => {
     if (!confirm('Are you sure you want to delete your profile?')) return;
     if (isLoading) return;
     try {
-      console.log('Attempting to delete profile');
       await axiosInstance.delete('/profile');
       setProfile(null);
       setFormData({ name: '', age: '', gender: '' });
