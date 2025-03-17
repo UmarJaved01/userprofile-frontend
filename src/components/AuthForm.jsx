@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance'; // Replace axios with axiosInstance
 import { useNavigate } from 'react-router-dom';
 
 const AuthForm = () => {
@@ -24,8 +24,8 @@ const AuthForm = () => {
       const data = isSignup
         ? formData
         : { identifier: formData.email || formData.username, password: formData.password };
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}${url}`, data, {
-        withCredentials: true,
+      const res = await axiosInstance.post(url, data, {
+        withCredentials: true, // Already set in axiosInstance, but kept for clarity
       });
 
       if (isSignup) {
@@ -33,12 +33,16 @@ const AuthForm = () => {
         setIsSignup(false); // Switch to login form
         setFormData({ username: '', email: '', password: '', confirmPassword: '' }); // Reset form
       } else {
+        console.log('Login successful, access token:', res.data.accessToken);
         localStorage.setItem('token', res.data.accessToken);
-        navigate('/profile');
+        // Add a slight delay to ensure App.jsx updates token state
+        setTimeout(() => {
+          navigate('/profile', { replace: true }); // Redirect to profile, replace history
+        }, 100); // 100ms delay
       }
     } catch (err) {
-      console.error(err.response.data);
-      alert(err.response.data.msg || 'An error occurred');
+      console.error('Auth error:', err.response?.data?.msg || err.message);
+      alert(err.response?.data?.msg || 'An error occurred');
     }
   };
 

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true, // Ensures httpOnly refreshToken cookie is sent
+  withCredentials: true,
 });
 
 axiosInstance.interceptors.request.use(
@@ -21,7 +21,7 @@ axiosInstance.interceptors.request.use(
 
 let isRefreshing = false;
 let failedQueue = [];
-let isRedirecting = false; // Global flag to prevent retries during redirect
+let isRedirecting = false;
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach((prom) => {
@@ -39,7 +39,6 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Skip if already redirecting
     if (isRedirecting) {
       return Promise.reject(error);
     }
@@ -76,16 +75,14 @@ axiosInstance.interceptors.response.use(
           url: refreshErr.config?.url,
         });
 
-        // Clear state to prevent retries
         localStorage.removeItem('token');
         isRefreshing = false;
         failedQueue = [];
-        isRedirecting = true; // Set flag to prevent further requests
+        isRedirecting = true;
 
-        // Immediate and synchronous redirect
         if (window.location.pathname !== '/') {
           console.log('Forcing logout and redirect to login page on HTTPS');
-          window.location.href = '/'; // Synchronous redirect
+          window.location.href = '/';
         }
 
         return Promise.reject(refreshErr);
@@ -99,7 +96,6 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-// Utility function to validate session
 export const validateSession = async () => {
   try {
     const res = await axiosInstance.get('/auth/validate-session', { withCredentials: true });

@@ -47,16 +47,15 @@ const Profile = () => {
     };
     validateSessionAndFetchProfile();
 
-    // Periodic session check
     const sessionCheckInterval = setInterval(async () => {
       const isSessionValid = await validateSession();
       if (!isSessionValid) {
         console.log('Periodic session check failed, forcing logout');
         handleLogoutOnFailure(new Error('Session invalid during periodic check'));
       }
-    }, 15000); // Check every 15 seconds
+    }, 15000);
 
-    return () => clearInterval(sessionCheckInterval); // Cleanup on unmount
+    return () => clearInterval(sessionCheckInterval);
   }, [navigate]);
 
   const handleChange = (e) => {
@@ -135,7 +134,7 @@ const Profile = () => {
     setProfile(null);
     setIsLoading(false);
     setErrorCount(0);
-    navigate('/'); // Force redirect to login page
+    navigate('/');
   };
 
   if (isLoading) {

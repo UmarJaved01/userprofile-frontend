@@ -14,7 +14,7 @@ class ErrorBoundary extends Component {
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     localStorage.removeItem('token');
-    this.props.navigate('/'); // Redirect to login on error
+    this.props.navigate('/');
   }
 
   render() {
@@ -25,7 +25,6 @@ class ErrorBoundary extends Component {
   }
 }
 
-// Wrapper to use hooks in a class component
 const ErrorBoundaryWithNavigate = (props) => {
   const navigate = useNavigate();
   return <ErrorBoundary {...props} navigate={navigate} />;
