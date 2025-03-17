@@ -69,10 +69,8 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
-      console.log('Attempting manual logout');
       await axiosInstance.post('/auth/logout');
     } catch (err) {
-      console.error('Error logging out:', err.message);
     } finally {
       localStorage.removeItem('token');
       setProfile(null);
