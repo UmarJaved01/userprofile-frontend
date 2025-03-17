@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
+  const { isLoggedIn } = useAuth; // Access isLoggedIn from context
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({ name: '', age: '', gender: '' });
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/', { replace: true });
+      return;
+    }
+
     const validateSessionAndFetchProfile = async () => {
       try {
         console.log('Validating session on Profile page load');
@@ -22,15 +29,13 @@ const Profile = () => {
         });
       } catch (err) {
         console.error('Session validation failed:', err.message);
-        // Logout is handled by axios interceptor, no need to duplicate here
-        setProfile(null); // Ensure profile state is cleared
-        setIsLoading(false);
+        setProfile(null); // Clear profile on error
       } finally {
         setIsLoading(false);
       }
     };
     validateSessionAndFetchProfile();
-  }, [navigate]);
+  }, [navigate, isLoggedIn]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -38,35 +43,33 @@ const Profile = () => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (isLoading || !isLoggedIn) return;
     try {
       console.log('Attempting to add profile');
       const res = await axiosInstance.post('/profile', formData);
       setProfile(res.data);
     } catch (err) {
       console.error('Error adding profile:', err.message);
-      setProfile(null); // Clear profile on error
-      setIsLoading(false);
+      setProfile(null);
     }
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (isLoading || !isLoggedIn) return;
     try {
       console.log('Attempting to update profile');
       const res = await axiosInstance.put('/profile', formData);
       setProfile(res.data);
     } catch (err) {
       console.error('Error updating profile:', err.message);
-      setProfile(null); // Clear profile on error
-      setIsLoading(false);
+      setProfile(null);
     }
   };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete your profile?')) return;
-    if (isLoading) return;
+    if (isLoading || !isLoggedIn) return;
     try {
       console.log('Attempting to delete profile');
       await axiosInstance.delete('/profile');
@@ -74,26 +77,20 @@ const Profile = () => {
       setFormData({ name: '', age: '', gender: '' });
     } catch (err) {
       console.error('Error deleting profile:', err.message);
-      setProfile(null); // Clear profile on error
-      setIsLoading(false);
+      setProfile(null);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      console.log('Attempting manual logout');
-      await axiosInstance.post('/auth/logout', {}, { withCredentials: true });
-    } catch (err) {
-      console.error('Error logging out:', err.message);
-    } finally {
-      localStorage.removeItem('token');
-      setProfile(null);
-      navigate('/', { replace: true }); // Replace history to prevent back navigation
-    }
+  const handleLogout = () => {
+    // Logout is handled by the context and interceptor
   };
 
   if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (!isLoggedIn) {
+    return null; // Component won't render if not logged in
   }
 
   return (
