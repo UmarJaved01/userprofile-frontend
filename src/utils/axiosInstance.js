@@ -62,14 +62,8 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (refreshErr) {
         console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
-        localStorage.removeItem('token'); // Clear the access token
-
-        // Immediate redirect on refresh failure
-        if (window.location.pathname !== '/') {
-          console.log('Redirecting to login page due to refresh token failure');
-          window.location.href = '/'; // Use href for compatibility
-        }
-
+        // Clear the access token
+        localStorage.removeItem('token');
         processQueue(refreshErr, null);
         return Promise.reject(refreshErr);
       } finally {

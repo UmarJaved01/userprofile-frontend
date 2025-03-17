@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axiosInstance from '../utils/axiosInstance'; // Replace axios with axiosInstance
+import axiosInstance from '../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 
 const AuthForm = () => {
@@ -25,20 +25,19 @@ const AuthForm = () => {
         ? formData
         : { identifier: formData.email || formData.username, password: formData.password };
       const res = await axiosInstance.post(url, data, {
-        withCredentials: true, // Already set in axiosInstance, but kept for clarity
+        withCredentials: true,
       });
 
       if (isSignup) {
-        alert(res.data.msg); // Show success message
-        setIsSignup(false); // Switch to login form
-        setFormData({ username: '', email: '', password: '', confirmPassword: '' }); // Reset form
+        alert(res.data.msg);
+        setIsSignup(false);
+        setFormData({ username: '', email: '', password: '', confirmPassword: '' });
       } else {
         console.log('Login successful, access token:', res.data.accessToken);
         localStorage.setItem('token', res.data.accessToken);
-        // Add a slight delay to ensure App.jsx updates token state
         setTimeout(() => {
-          navigate('/profile', { replace: true }); // Redirect to profile, replace history
-        }, 100); // 100ms delay
+          navigate('/profile', { replace: true });
+        }, 100);
       }
     } catch (err) {
       console.error('Auth error:', err.response?.data?.msg || err.message);

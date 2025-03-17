@@ -9,11 +9,11 @@ const Profile = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const validateSessionAndFetchProfile = async () => {
+    const fetchProfile = async () => {
       try {
-        console.log('Validating session on Profile page load');
+        console.log('Fetching profile on page load');
         const res = await axiosInstance.get('/profile');
-        console.log('Session validated, profile fetched:', res.data);
+        console.log('Profile fetched:', res.data);
         setProfile(res.data);
         setFormData({
           name: res.data.name || '',
@@ -21,13 +21,13 @@ const Profile = () => {
           gender: res.data.gender || '',
         });
       } catch (err) {
-        console.error('Session validation failed:', err.message);
+        console.error('Error fetching profile:', err.message);
         handleLogoutOnFailure(err);
       } finally {
         setIsLoading(false);
       }
     };
-    validateSessionAndFetchProfile();
+    fetchProfile();
   }, [navigate]);
 
   const handleChange = (e) => {
