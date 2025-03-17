@@ -9,12 +9,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
     if (window.location.pathname !== '/') {
+      console.log('Redirecting to login due to logout');
       window.location.href = '/'; // Force redirect to login
     }
   };
 
   useEffect(() => {
     if (!isLoggedIn && window.location.pathname !== '/') {
+      console.log('Redirecting to login because user is not logged in');
       window.location.href = '/';
     }
   }, [isLoggedIn]);

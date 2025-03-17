@@ -1,17 +1,14 @@
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext'; // Import the context hook
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
 });
 
-// Inject the logout function (this requires a slight hack since interceptors are static;
-// we'll pass it via a custom setup function)
-let logoutFunction = () => {}; // Default logout function
+let logoutFunction = () => {};
 
 export const setupAxiosInstance = (logout) => {
-  logoutFunction = logout; // Set the logout function from the context
+  logoutFunction = logout;
 
   axiosInstance.interceptors.request.use(
     (config) => {
@@ -78,10 +75,9 @@ export const setupAxiosInstance = (logout) => {
         }
       }
 
-      // Handle any 401 error (e.g., invalid access token without retry)
       if (error.response && error.response.status === 401) {
         console.log('401 Unauthorized error detected, forcing logout');
-        logoutFunction(); // Force logout on any 401
+        logoutFunction();
         return Promise.reject(error);
       }
 

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx'; // Updated extension
 
 const Profile = () => {
-  const { isLoggedIn } = useAuth; // Access isLoggedIn from context
+  const { isLoggedIn, logout } = useAuth(); // Access isLoggedIn and logout from context
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({ name: '', age: '', gender: '' });
   const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +82,7 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
-    // Logout is handled by the context and interceptor
+    logout(); // Use the logout function from context
   };
 
   if (isLoading) {

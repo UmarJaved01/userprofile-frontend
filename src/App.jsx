@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthForm from './components/AuthForm';
 import Profile from './components/Profile';
 import './style.css';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext.jsx'; // Updated extension
 import { setupAxiosInstance } from './utils/axiosInstance';
 import { useEffect } from 'react';
 
