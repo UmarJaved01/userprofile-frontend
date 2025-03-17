@@ -33,7 +33,6 @@ const AuthForm = () => {
         setIsSignup(false); // Switch to login form
         setFormData({ username: '', email: '', password: '', confirmPassword: '' }); // Reset form
       } else {
-        console.log('Login successful, access token:', res.data.accessToken);
         localStorage.setItem('token', res.data.accessToken);
         // Add a slight delay to ensure App.jsx updates token state
         setTimeout(() => {
