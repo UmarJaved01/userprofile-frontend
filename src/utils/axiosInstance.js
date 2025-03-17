@@ -13,7 +13,10 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('Request setup error:', error.message);
+    return Promise.reject(error);
+  }
 );
 
 let isRefreshing = false;
@@ -66,20 +69,33 @@ axiosInstance.interceptors.response.use(
           status: refreshErr.response?.status,
           url: refreshErr.config?.url,
         });
-        localStorage.removeItem('token'); // Clear the access token
 
-        // Immediate and synchronous redirect with termination
+        // Clear state to prevent infinite retries
+        localStorage.removeItem('token');
+        isRefreshing = false;
+        failedQueue = [];
+
+        // Immediate and synchronous redirect
         if (window.location.pathname !== '/') {
           console.log('Forcing logout and redirect to login page on HTTPS');
           window.location.href = '/'; // Synchronous redirect
-          isRefreshing = false; // Reset to stop further retries
-          failedQueue = []; // Clear queue to prevent infinite loops
+          // Ensure redirect by polling
+          let redirectAttempts = 0;
+          const maxAttempts = 5;
+          const checkRedirect = setInterval(() => {
+            if (window.location.pathname === '/' || redirectAttempts >= maxAttempts) {
+              clearInterval(checkRedirect);
+            } else {
+              console.log(`Redirect attempt ${redirectAttempts + 1} of ${maxAttempts}`);
+              window.location.href = '/';
+              redirectAttempts++;
+            }
+          }, 200); // Check every 200ms
         }
 
-        processQueue(refreshErr, null);
-        return Promise.reject(refreshErr); // Reject after redirect
+        return Promise.reject(refreshErr); // Reject after redirect attempt
       } finally {
-        isRefreshing = false; // Ensure reset
+        isRefreshing = false;
       }
     }
 

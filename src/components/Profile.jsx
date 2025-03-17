@@ -13,7 +13,7 @@ const Profile = () => {
     const validateSessionAndFetchProfile = async () => {
       let attempt = 0;
       const maxAttempts = 3;
-      const maxErrors = 3; // Fail-safe for repeated failures
+      const maxErrors = 2; // Reduced to 2 for faster failover
 
       while (attempt < maxAttempts && errorCount < maxErrors) {
         try {
@@ -33,6 +33,7 @@ const Profile = () => {
           setErrorCount(prev => prev + 1);
           if (attempt === maxAttempts - 1 || errorCount >= maxErrors - 1) {
             handleLogoutOnFailure(err);
+            break; // Exit loop on max errors
           }
           attempt++;
           await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
@@ -62,7 +63,7 @@ const Profile = () => {
     } catch (err) {
       console.error('Error adding profile:', err.message);
       setErrorCount(prev => prev + 1);
-      if (errorCount >= 2) { // Fail-safe after 3 total errors
+      if (errorCount >= 1) { // Reduced to 2 total errors
         handleLogoutOnFailure(err);
       }
     }
@@ -79,7 +80,7 @@ const Profile = () => {
     } catch (err) {
       console.error('Error updating profile:', err.message);
       setErrorCount(prev => prev + 1);
-      if (errorCount >= 2) { // Fail-safe after 3 total errors
+      if (errorCount >= 1) { // Reduced to 2 total errors
         handleLogoutOnFailure(err);
       }
     }
@@ -97,7 +98,7 @@ const Profile = () => {
     } catch (err) {
       console.error('Error deleting profile:', err.message);
       setErrorCount(prev => prev + 1);
-      if (errorCount >= 2) { // Fail-safe after 3 total errors
+      if (errorCount >= 1) { // Reduced to 2 total errors
         handleLogoutOnFailure(err);
       }
     }
