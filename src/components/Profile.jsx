@@ -22,7 +22,7 @@ const Profile = () => {
         });
       } catch (err) {
         console.error('Session validation failed:', err.message);
-        handleLogoutOnFailure(err);
+        handleLogoutOnFailure(err); // Handle failure, including refresh token issues
       } finally {
         setIsLoading(false);
       }
@@ -77,22 +77,33 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       console.log('Attempting manual logout');
-      await axiosInstance.post('/auth/logout');
+      await axiosInstance.post('/auth/logout', {}, { withCredentials: true });
     } catch (err) {
       console.error('Error logging out:', err.message);
     } finally {
       localStorage.removeItem('token');
       setProfile(null);
-      navigate('/');
+      navigate('/', { replace: true }); // Replace history to prevent back navigation
     }
   };
 
   const handleLogoutOnFailure = (err) => {
     console.log('Forcing logout due to error:', err.message);
+    // Check if the error is due to a refresh token failure
+    const isRefreshTokenError =
+      err.response?.status === 401 &&
+      err.response?.data?.msg?.includes('refresh token');
+    
     localStorage.removeItem('token');
     setProfile(null);
     setIsLoading(false);
-    navigate('/'); // Force redirect to login page
+    
+    if (isRefreshTokenError) {
+      console.log('Refresh token failure detected, logging out immediately');
+      navigate('/', { replace: true }); // Immediate redirect on refresh token failure
+    } else {
+      navigate('/', { replace: true }); // Redirect for other errors as well
+    }
   };
 
   if (isLoading) {

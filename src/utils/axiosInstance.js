@@ -30,6 +30,15 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+// Function to handle logout on token refresh failure
+const handleLogoutOnRefreshFailure = () => {
+  localStorage.removeItem('token');
+  if (window.location.pathname !== '/') {
+    console.log('Redirecting to login page due to refresh token failure');
+    window.location.href = '/'; // Immediate redirect to login
+  }
+};
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -62,16 +71,7 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (refreshErr) {
         console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
-        // Check if the backend signaled a logout
-        if (refreshErr.response?.data?.logout) {
-          console.log('Backend signaled logout due to invalid refresh token');
-          localStorage.removeItem('token'); // Clear the access token
-          // Immediate redirect on refresh failure
-          if (window.location.pathname !== '/') {
-            console.log('Redirecting to login page due to refresh token failure');
-            window.location.href = '/'; // Use href for compatibility
-          }
-        }
+        handleLogoutOnRefreshFailure(); // Trigger logout
         processQueue(refreshErr, null);
         return Promise.reject(refreshErr);
       } finally {
@@ -80,15 +80,6 @@ axiosInstance.interceptors.response.use(
     }
 
     console.log('Request failed:', error.response?.data?.msg || error.message);
-    // Handle non-401 errors: Check if the error response includes a logout flag
-    if (error.response?.data?.logout) {
-      console.log('Backend signaled logout due to invalid refresh token in non-refresh request');
-      localStorage.removeItem('token');
-      if (window.location.pathname !== '/') {
-        console.log('Redirecting to login page due to refresh token failure');
-        window.location.href = '/';
-      }
-    }
     return Promise.reject(error);
   }
 );
