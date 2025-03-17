@@ -49,7 +49,6 @@ axiosInstance.interceptors.response.use(
 
       originalRequest._retry = true;
       isRefreshing = true;
-
       try {
         console.log('Attempting to refresh access token');
         const res = await axiosInstance.post('/auth/refresh', {}, { withCredentials: true });
