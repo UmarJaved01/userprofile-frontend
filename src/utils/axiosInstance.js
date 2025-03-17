@@ -54,7 +54,6 @@ axiosInstance.interceptors.response.use(
         const res = await axiosInstance.post('/auth/refresh', {}, { withCredentials: true });
         const newAccessToken = res.data.accessToken;
 
-        // Check if newAccessToken exists and is not empty
         if (!newAccessToken || newAccessToken === '') {
           throw new Error('No access token generated');
         }
@@ -65,10 +64,9 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (refreshErr) {
         console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
-        localStorage.removeItem('token'); // Clear the access token
+        localStorage.removeItem('token');
         processQueue(refreshErr, null);
 
-        // Redirect to login page if not already on login page
         if (window.location.pathname !== '/') {
           console.log('Redirecting to login page due to invalid or missing refresh token');
           window.location.href = '/';
@@ -79,8 +77,6 @@ axiosInstance.interceptors.response.use(
         isRefreshing = false;
       }
     }
-
-    // If the error is not a 401 or we've already retried, reject the error
     console.log('Request failed:', error.response?.data?.msg || error.message);
     return Promise.reject(error);
   }
