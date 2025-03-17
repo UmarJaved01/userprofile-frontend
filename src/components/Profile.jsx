@@ -11,9 +11,7 @@ const Profile = () => {
   useEffect(() => {
     const validateSessionAndFetchProfile = async () => {
       try {
-        console.log('Validating session on Profile page load');
         const res = await axiosInstance.get('/profile');
-        console.log('Session validated, profile fetched:', res.data);
         setProfile(res.data);
         setFormData({
           name: res.data.name || '',
