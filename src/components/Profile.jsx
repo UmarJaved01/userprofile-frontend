@@ -9,11 +9,11 @@ const Profile = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const validateSessionAndFetchProfile = async () => {
       try {
-        console.log('Fetching profile on page load');
+        console.log('Validating session on Profile page load');
         const res = await axiosInstance.get('/profile');
-        console.log('Profile fetched:', res.data);
+        console.log('Session validated, profile fetched:', res.data);
         setProfile(res.data);
         setFormData({
           name: res.data.name || '',
@@ -21,13 +21,13 @@ const Profile = () => {
           gender: res.data.gender || '',
         });
       } catch (err) {
-        console.error('Error fetching profile:', err.message);
+        console.error('Session validation failed:', err.message);
         handleLogoutOnFailure(err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchProfile();
+    validateSessionAndFetchProfile();
   }, [navigate]);
 
   const handleChange = (e) => {
@@ -92,7 +92,7 @@ const Profile = () => {
     localStorage.removeItem('token');
     setProfile(null);
     setIsLoading(false);
-    navigate('/');
+    navigate('/'); // Force redirect to login page
   };
 
   if (isLoading) {
