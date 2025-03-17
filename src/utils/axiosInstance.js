@@ -21,6 +21,7 @@ axiosInstance.interceptors.request.use(
 
 let isRefreshing = false;
 let failedQueue = [];
+let isRedirecting = false; // Global flag to prevent retries during redirect
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach((prom) => {
@@ -37,6 +38,11 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Skip if already redirecting
+    if (isRedirecting) {
+      return Promise.reject(error);
+    }
 
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -70,30 +76,19 @@ axiosInstance.interceptors.response.use(
           url: refreshErr.config?.url,
         });
 
-        // Clear state to prevent infinite retries
+        // Clear state to prevent retries
         localStorage.removeItem('token');
         isRefreshing = false;
         failedQueue = [];
+        isRedirecting = true; // Set flag to prevent further requests
 
         // Immediate and synchronous redirect
         if (window.location.pathname !== '/') {
           console.log('Forcing logout and redirect to login page on HTTPS');
           window.location.href = '/'; // Synchronous redirect
-          // Ensure redirect by polling
-          let redirectAttempts = 0;
-          const maxAttempts = 5;
-          const checkRedirect = setInterval(() => {
-            if (window.location.pathname === '/' || redirectAttempts >= maxAttempts) {
-              clearInterval(checkRedirect);
-            } else {
-              console.log(`Redirect attempt ${redirectAttempts + 1} of ${maxAttempts}`);
-              window.location.href = '/';
-              redirectAttempts++;
-            }
-          }, 200); // Check every 200ms
         }
 
-        return Promise.reject(refreshErr); // Reject after redirect attempt
+        return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;
       }
@@ -103,5 +98,17 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Utility function to validate session
+export const validateSession = async () => {
+  try {
+    const res = await axiosInstance.get('/auth/validate-session', { withCredentials: true });
+    console.log('Session validation response:', res.data);
+    return res.data.msg === 'Session valid';
+  } catch (err) {
+    console.error('Session validation failed:', err.message);
+    return false;
+  }
+};
 
 export default axiosInstance;

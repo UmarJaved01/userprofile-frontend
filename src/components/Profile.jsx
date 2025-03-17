@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
-import axiosInstance from '../utils/axiosInstance';
+import axiosInstance, { validateSession } from '../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({ name: '', age: '', gender: '' });
   const [isLoading, setIsLoading] = useState(true);
-  const [errorCount, setErrorCount] = useState(0); // Track consecutive errors
+  const [errorCount, setErrorCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
     const validateSessionAndFetchProfile = async () => {
       let attempt = 0;
       const maxAttempts = 3;
-      const maxErrors = 2; // Reduced to 2 for faster failover
+      const maxErrors = 2;
 
       while (attempt < maxAttempts && errorCount < maxErrors) {
         try {
@@ -26,17 +26,17 @@ const Profile = () => {
             age: res.data.age || '',
             gender: res.data.gender || '',
           });
-          setErrorCount(0); // Reset error count on success
+          setErrorCount(0);
           break;
         } catch (err) {
           console.error('Session validation failed, attempt', attempt + 1, ':', err.message);
           setErrorCount(prev => prev + 1);
           if (attempt === maxAttempts - 1 || errorCount >= maxErrors - 1) {
             handleLogoutOnFailure(err);
-            break; // Exit loop on max errors
+            break;
           }
           attempt++;
-          await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
 
@@ -46,6 +46,17 @@ const Profile = () => {
       setIsLoading(false);
     };
     validateSessionAndFetchProfile();
+
+    // Periodic session check
+    const sessionCheckInterval = setInterval(async () => {
+      const isSessionValid = await validateSession();
+      if (!isSessionValid) {
+        console.log('Periodic session check failed, forcing logout');
+        handleLogoutOnFailure(new Error('Session invalid during periodic check'));
+      }
+    }, 15000); // Check every 15 seconds
+
+    return () => clearInterval(sessionCheckInterval); // Cleanup on unmount
   }, [navigate]);
 
   const handleChange = (e) => {
@@ -59,11 +70,11 @@ const Profile = () => {
       console.log('Attempting to add profile on HTTPS');
       const res = await axiosInstance.post('/profile', formData);
       setProfile(res.data);
-      setErrorCount(0); // Reset on success
+      setErrorCount(0);
     } catch (err) {
       console.error('Error adding profile:', err.message);
       setErrorCount(prev => prev + 1);
-      if (errorCount >= 1) { // Reduced to 2 total errors
+      if (errorCount >= 1) {
         handleLogoutOnFailure(err);
       }
     }
@@ -76,11 +87,11 @@ const Profile = () => {
       console.log('Attempting to update profile on HTTPS');
       const res = await axiosInstance.put('/profile', formData);
       setProfile(res.data);
-      setErrorCount(0); // Reset on success
+      setErrorCount(0);
     } catch (err) {
       console.error('Error updating profile:', err.message);
       setErrorCount(prev => prev + 1);
-      if (errorCount >= 1) { // Reduced to 2 total errors
+      if (errorCount >= 1) {
         handleLogoutOnFailure(err);
       }
     }
@@ -94,11 +105,11 @@ const Profile = () => {
       await axiosInstance.delete('/profile');
       setProfile(null);
       setFormData({ name: '', age: '', gender: '' });
-      setErrorCount(0); // Reset on success
+      setErrorCount(0);
     } catch (err) {
       console.error('Error deleting profile:', err.message);
       setErrorCount(prev => prev + 1);
-      if (errorCount >= 1) { // Reduced to 2 total errors
+      if (errorCount >= 1) {
         handleLogoutOnFailure(err);
       }
     }
