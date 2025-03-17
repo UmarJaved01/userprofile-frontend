@@ -51,8 +51,10 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
+        console.log('Attempting to refresh access token');
         const res = await axiosInstance.post('/auth/refresh', {}, { withCredentials: true });
         const newAccessToken = res.data.accessToken;
+        console.log('New access token generated:', newAccessToken);
 
         localStorage.setItem('token', newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -62,14 +64,14 @@ axiosInstance.interceptors.response.use(
         console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
         localStorage.removeItem('token'); // Clear the access token
 
-        // Immediate and synchronous redirect
+        // Immediate redirect on refresh failure
         if (window.location.pathname !== '/') {
           console.log('Redirecting to login page due to refresh token failure');
-          window.location.replace('/'); // Force redirect now
+          window.location.href = '/'; // Use href for compatibility
         }
 
         processQueue(refreshErr, null);
-        return Promise.reject(refreshErr); // Reject after redirect
+        return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;
       }
