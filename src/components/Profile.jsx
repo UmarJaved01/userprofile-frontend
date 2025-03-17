@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx'; // Updated extension
+import { useAuth } from '../context/AuthContext.jsx';
 
 const Profile = () => {
-  const { isLoggedIn, logout } = useAuth(); // Access isLoggedIn and logout from context
+  const { isLoggedIn, logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({ name: '', age: '', gender: '' });
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +29,7 @@ const Profile = () => {
         });
       } catch (err) {
         console.error('Session validation failed:', err.message);
-        setProfile(null); // Clear profile on error
+        setProfile(null);
       } finally {
         setIsLoading(false);
       }
@@ -82,7 +82,7 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
-    logout(); // Use the logout function from context
+    logout();
   };
 
   if (isLoading) {
@@ -90,7 +90,7 @@ const Profile = () => {
   }
 
   if (!isLoggedIn) {
-    return null; // Component won't render if not logged in
+    return null;
   }
 
   return (

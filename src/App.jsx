@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthForm from './components/AuthForm';
 import Profile from './components/Profile';
 import './style.css';
-import { AuthProvider, useAuth } from './context/AuthContext.jsx'; // Updated extension
+import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { setupAxiosInstance } from './utils/axiosInstance';
 import { useEffect } from 'react';
 
@@ -10,7 +10,7 @@ function AppContent() {
   const { logout, isLoggedIn } = useAuth();
 
   useEffect(() => {
-    setupAxiosInstance(logout); // Set up axios with the logout function
+    setupAxiosInstance(logout);
   }, [logout]);
 
   return (

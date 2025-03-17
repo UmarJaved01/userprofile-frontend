@@ -5,12 +5,17 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
 
+  const login = (token) => {
+    localStorage.setItem('token', token);
+    setIsLoggedIn(true);
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
     if (window.location.pathname !== '/') {
       console.log('Redirecting to login due to logout');
-      window.location.href = '/'; // Force redirect to login
+      window.location.href = '/';
     }
   };
 
@@ -22,7 +27,7 @@ export const AuthProvider = ({ children }) => {
   }, [isLoggedIn]);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
