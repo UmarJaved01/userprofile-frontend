@@ -92,7 +92,7 @@ const Profile = () => {
     localStorage.removeItem('token');
     setProfile(null);
     setIsLoading(false);
-    // Rely on App.jsx route protection for redirect
+    navigate('/'); // Force redirect to login page
   };
 
   if (isLoading) {
