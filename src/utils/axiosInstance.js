@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true,
+  withCredentials: true, // Ensures httpOnly refreshToken cookie is sent
 });
 
 axiosInstance.interceptors.request.use(
@@ -51,7 +51,7 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        console.log('Attempting to refresh access token');
+        console.log('Attempting to refresh access token with httpOnly cookie');
         const res = await axiosInstance.post('/auth/refresh', {}, { withCredentials: true });
         const newAccessToken = res.data.accessToken;
         console.log('New access token generated:', newAccessToken);
@@ -61,13 +61,29 @@ axiosInstance.interceptors.response.use(
         processQueue(null, newAccessToken);
         return axiosInstance(originalRequest);
       } catch (refreshErr) {
-        console.log('Refresh token failed:', refreshErr.response?.data?.msg || refreshErr.message);
+        console.log('Refresh token failure on HTTPS:', {
+          message: refreshErr.response?.data?.msg || refreshErr.message,
+          status: refreshErr.response?.status,
+          url: refreshErr.config?.url,
+        });
         localStorage.removeItem('token'); // Clear the access token
 
-        // Immediate redirect on refresh failure
+        // Immediate and synchronous redirect with fallback
         if (window.location.pathname !== '/') {
-          console.log('Redirecting to login page due to refresh token failure');
-          window.location.href = '/'; // Use href for compatibility
+          console.log('Forcing logout and redirect to login page on HTTPS');
+          window.location.href = '/'; // Synchronous redirect
+          // Ensure redirect by checking location change
+          let redirectAttempts = 0;
+          const maxAttempts = 5;
+          const checkRedirect = setInterval(() => {
+            if (window.location.pathname === '/' || redirectAttempts >= maxAttempts) {
+              clearInterval(checkRedirect);
+            } else {
+              window.location.href = '/';
+              redirectAttempts++;
+              console.log(`Redirect attempt ${redirectAttempts} of ${maxAttempts}`);
+            }
+          }, 100); // Check every 100ms
         }
 
         processQueue(refreshErr, null);
@@ -77,7 +93,7 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    console.log('Request failed:', error.response?.data?.msg || error.message);
+    console.log('Request failed on HTTPS:', error.response?.data?.msg || error.message);
     return Promise.reject(error);
   }
 );
