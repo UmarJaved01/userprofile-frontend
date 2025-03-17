@@ -68,28 +68,18 @@ axiosInstance.interceptors.response.use(
         });
         localStorage.removeItem('token'); // Clear the access token
 
-        // Immediate and synchronous redirect with fallback
+        // Immediate and synchronous redirect with termination
         if (window.location.pathname !== '/') {
           console.log('Forcing logout and redirect to login page on HTTPS');
           window.location.href = '/'; // Synchronous redirect
-          // Ensure redirect by checking location change
-          let redirectAttempts = 0;
-          const maxAttempts = 5;
-          const checkRedirect = setInterval(() => {
-            if (window.location.pathname === '/' || redirectAttempts >= maxAttempts) {
-              clearInterval(checkRedirect);
-            } else {
-              window.location.href = '/';
-              redirectAttempts++;
-              console.log(`Redirect attempt ${redirectAttempts} of ${maxAttempts}`);
-            }
-          }, 100); // Check every 100ms
+          isRefreshing = false; // Reset to stop further retries
+          failedQueue = []; // Clear queue to prevent infinite loops
         }
 
         processQueue(refreshErr, null);
-        return Promise.reject(refreshErr);
+        return Promise.reject(refreshErr); // Reject after redirect
       } finally {
-        isRefreshing = false;
+        isRefreshing = false; // Ensure reset
       }
     }
 
